@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -9,6 +9,7 @@ import AdEditor from '../components/AdEditor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Copy } from 'lucide-react';
+import Image from 'next/image';
 
 export default function FacebookAdCreator() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -28,11 +29,9 @@ export default function FacebookAdCreator() {
   const [loading, setLoading] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false); // State to control the editor visibility
   const [uploadedImage, setUploadedImage] = useState(null);
-  const [uploadedImageFile, setUploadedImageFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
-  const [savedStyle, setSavedStyle] = useState(null);
   const [editedAd, setEditedAd] = useState(null);
   const [activeVariation, setActiveVariation] = useState('variation1');
 
@@ -82,16 +81,6 @@ export default function FacebookAdCreator() {
     },
   ];
 
-  useEffect(() => {
-    // Load saved style from localStorage on component mount
-    const savedStyleJSON = localStorage.getItem('savedAdStyle');
-    if (savedStyleJSON) {
-      setSavedStyle(JSON.parse(savedStyleJSON));
-    }
-  }, []);
-
-  const fontOptions = ['Arial', 'Helvetica', 'Times New Roman', 'Courier', 'Verdana', 'Georgia', 'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact'];
-
   const imageStyles = [
     { value: 'sketch', label: 'Sketch Style', image: '/styles/sketch.png' },
     { value: 'animated', label: 'Animated Style', image: '/styles/animated.png' },
@@ -116,8 +105,6 @@ export default function FacebookAdCreator() {
     popart: 'Pop art illustration of {keywords}, with bold outlines and vibrant colors.',
     cartoon: 'Colorful cartoon drawing of {keywords}, with expressive characters and dynamic poses.',
   };
-
-  const [previewAd, setPreviewAd] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -279,7 +266,6 @@ export default function FacebookAdCreator() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setUploadedImage(reader.result);
-        setUploadedImageFile(file);
         setAdDetails((prev) => ({ 
           ...prev, 
           imageStyle: 'upload',
@@ -327,7 +313,6 @@ export default function FacebookAdCreator() {
 
   const removeUploadedImage = () => {
     setUploadedImage(null);
-    setUploadedImageFile(null);
     setAdDetails((prev) => ({ ...prev, imageStyle: '' }));
   };
 
@@ -340,62 +325,31 @@ export default function FacebookAdCreator() {
     setUploadedImage(null);
   }, []);
 
-  const handlePreviewUpdate = (updatedAd) => {
-    setPreviewAd(updatedAd);
-  };
+  // Remove or comment out these unused functions
+  // const handleSaveStyle = (style) => {
+  //   setSavedStyle(style);
+  //   localStorage.setItem('savedAdStyle', JSON.stringify(style));
+  //   toast.success('Style saved successfully!');
+  // };
 
-  const handleSaveStyle = (style) => {
-    setSavedStyle(style);
-    localStorage.setItem('savedAdStyle', JSON.stringify(style));
-    toast.success('Style saved successfully!');
-  };
+  // const handleLoadDefaultStyle = () => {
+  //   if (savedStyle) {
+  //     setPreviewAd((prevAd) => ({
+  //       ...prevAd,
+  //       topFont: savedStyle.topFont,
+  //       bottomFont: savedStyle.bottomFont,
+  //       topFontSize: savedStyle.topFontSize,
+  //       bottomFontSize: savedStyle.bottomFontSize,
+  //       topTextColor: savedStyle.topTextColor,
+  //       bottomTextColor: savedStyle.bottomTextColor,
+  //     }));
+  //     toast.success('Default style loaded!');
+  //   } else {
+  //     toast.error('No saved style found. Save a style first.');
+  //   }
+  // };
 
-  const handleLoadDefaultStyle = () => {
-    if (savedStyle) {
-      setPreviewAd((prevAd) => ({
-        ...prevAd,
-        topFont: savedStyle.topFont,
-        bottomFont: savedStyle.bottomFont,
-        topFontSize: savedStyle.topFontSize,
-        bottomFontSize: savedStyle.bottomFontSize,
-        topTextColor: savedStyle.topTextColor,
-        bottomTextColor: savedStyle.bottomTextColor,
-      }));
-      toast.success('Default style loaded!');
-    } else {
-      toast.error('No saved style found. Save a style first.');
-    }
-  };
-
-  const handleUpdateTextPosition = (position, newPosition) => {
-    setEditedAd(prev => ({
-      ...prev,
-      [`${position}PositionX`]: newPosition.x,
-      [`${position}PositionY`]: newPosition.y,
-    }));
-  };
-
-  const handleUpdateTextSize = (position, newSize) => {
-    setEditedAd(prev => ({
-      ...prev,
-      [`${position}FontSize`]: newSize,
-    }));
-  };
-
-  const handleUpdateImageSize = (newSize) => {
-    setEditedAd(prev => ({
-      ...prev,
-      imageSize: newSize,
-    }));
-  };
-
-  const handleUpdateImagePosition = (newPosition) => {
-    setEditedAd(prev => ({
-      ...prev,
-      imagePositionX: newPosition.x,
-      imagePositionY: newPosition.y,
-    }));
-  };
+  // If you need these functions in the future, you can keep them commented out
 
   const handleEditorUpdate = (updatedAd) => {
     console.log('handleEditorUpdate called with:', updatedAd);
@@ -591,10 +545,13 @@ export default function FacebookAdCreator() {
                     }`}
                     onClick={() => handleStyleClick(style)}
                   >
-                    <img
+                    <Image
                       src={style.image}
                       alt={style.label}
-                      className="w-full h-16 object-cover mb-1"
+                      width={100}
+                      height={64}
+                      layout="responsive"
+                      objectFit="cover"
                     />
                     <p className="text-center text-xs">{style.label}</p>
                   </div>
@@ -629,7 +586,13 @@ export default function FacebookAdCreator() {
             </div>
             {uploadedImage && (
               <div className="mt-4">
-                <img src={uploadedImage} alt="Uploaded" className="max-w-full h-auto mb-2" />
+                <Image
+                  src={uploadedImage}
+                  alt="Uploaded"
+                  width={500}
+                  height={300}
+                  layout="responsive"
+                />
                 <button
                   type="button"
                   onClick={removeUploadedImage}

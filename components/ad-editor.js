@@ -63,7 +63,7 @@ export function AdEditorComponent({ generatedAd, onUpdate, onSave, onCancel }) {
     console.log('Applying AI Design');
     const updatedAd = { ...editedAd };
     const canvasWidth = updatedAd.exportSize.width;
-    const canvasHeight = updatedAd.exportSize.height;
+    // Remove this line: const canvasHeight = updatedAd.exportSize.height;
 
     // Apply AI design logic here
     updatedAd.topFont = 'Impact';

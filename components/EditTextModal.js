@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { fonts } from '../fonts';
 
-const EditTextModal = ({ generatedAd, onClose, onSave, onUpdate }) => {
+const EditTextModal = ({ generatedAd, onClose, onSave }) => {
   const [editedAd, setEditedAd] = useState({
     ...generatedAd,
     topPadding: generatedAd.topPadding || 10,
@@ -17,10 +17,6 @@ const EditTextModal = ({ generatedAd, onClose, onSave, onUpdate }) => {
 
   const [activeTab, setActiveTab] = useState('top');
   const [matchTopBottom, setMatchTopBottom] = useState(false);
-  const [localTexts, setLocalTexts] = useState({
-    topText: editedAd.topText,
-    bottomText: editedAd.bottomText,
-  });
 
   const handleMatchTopBottom = (checked) => {
     setMatchTopBottom(checked);
@@ -48,16 +44,6 @@ const EditTextModal = ({ generatedAd, onClose, onSave, onUpdate }) => {
       }
       return newState;
     });
-  };
-
-  const handleTextChange = (position, value) => {
-    setLocalTexts(prev => ({ ...prev, [`${position}Text`]: value }));
-    
-    const timer = setTimeout(() => {
-      setEditedAd(prev => ({ ...prev, [`${position}Text`]: value }));
-    }, 300);
-
-    return () => clearTimeout(timer);
   };
 
   const handleSliderChange = (field, value) => {
@@ -96,7 +82,7 @@ const EditTextModal = ({ generatedAd, onClose, onSave, onUpdate }) => {
 
     useEffect(() => {
       setLocalText(editedAd[`${position}Text`]);
-    }, [editedAd, position]);
+    }, [position]);
 
     const handleTextChange = (e) => {
       const newValue = e.target.value;

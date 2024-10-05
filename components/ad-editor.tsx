@@ -11,17 +11,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { AlignLeft, AlignCenter, AlignRight, Wand2 } from 'lucide-react'
 import { fonts } from '../fonts'
-import { debounce } from 'lodash'
 
 // Custom debounce function
-function debounce<F extends (...args: any[]) => any>(func: F, wait: number): (...args: Parameters<F>) => void {
+function debounce<F extends (...args: any[]) => any>(func: F, wait: number): F & { cancel: () => void } {
   let timeout: ReturnType<typeof setTimeout> | null = null;
-  return (...args: Parameters<F>) => {
+  const debouncedFunc = (...args: Parameters<F>) => {
     if (timeout !== null) {
       clearTimeout(timeout);
     }
     timeout = setTimeout(() => func(...args), wait);
   };
+  debouncedFunc.cancel = () => {
+    if (timeout !== null) {
+      clearTimeout(timeout);
+    }
+  };
+  return debouncedFunc as F & { cancel: () => void };
 }
 
 interface GeneratedAd {
@@ -53,6 +58,7 @@ interface GeneratedAd {
   topCanvColorEnabled?: boolean;
   bottomCanvColorEnabled?: boolean;
   hideTextAreas?: boolean;
+  [key: string]: string | number | boolean | { width: number; height: number; } | undefined;
 }
 
 interface AdEditorComponentProps {
@@ -130,11 +136,11 @@ export function AdEditorComponent({ generatedAd, onUpdate, onSave, onCancel }: A
     setEditedAd((prev) => {
       const newState = { ...prev };
       if (position) {
-        const key = `${position}${field.charAt(0).toUpperCase() + field.slice(1)}` as keyof GeneratedAd;
+        const key = `${position}${(field as string).charAt(0).toUpperCase() + (field as string).slice(1)}` as keyof GeneratedAd;
         newState[key] = value;
         if (matchTexts && (position === 'top' || position === 'bottom')) {
           const otherPosition = position === 'top' ? 'bottom' : 'top';
-          const otherKey = `${otherPosition}${field.charAt(0).toUpperCase() + field.slice(1)}` as keyof GeneratedAd;
+          const otherKey = `${otherPosition}${(field as string).charAt(0).toUpperCase() + (field as string).slice(1)}` as keyof GeneratedAd;
           newState[otherKey] = value;
         }
       } else {
@@ -165,7 +171,6 @@ export function AdEditorComponent({ generatedAd, onUpdate, onSave, onCancel }: A
     console.log('Applying AI Design');
     const updatedAd = { ...editedAd };
     const canvasWidth = updatedAd.exportSize.width;
-    const canvasHeight = updatedAd.exportSize.height;
 
     // Apply AI design logic here
     updatedAd.topFont = 'Impact';
@@ -194,15 +199,17 @@ export function AdEditorComponent({ generatedAd, onUpdate, onSave, onCancel }: A
   const TextEditor = ({ position }: { position: 'top' | 'bottom' }) => {
     const [localText, setLocalText] = useState(editedAd[`${position}Text`]);
 
+    const positionText = editedAd[`${position}Text`];
+
     useEffect(() => {
-      setLocalText(editedAd[`${position}Text`]);
-    }, [editedAd, position]);
+      setLocalText(positionText);
+    }, [position, positionText]);
 
     const debouncedHandleChange = useMemo(
       () => debounce((value: string) => {
         handleChange('Text' as keyof GeneratedAd, value, position);
       }, 300),
-      [handleChange, position]
+      [position]
     );
 
     useEffect(() => {

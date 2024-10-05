@@ -1,29 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-const AdEditor = ({ generatedAd, onDownload, onUpdate }) => {
+const AdEditor = ({ generatedAd, onDownload }) => {
   const canvasRef = useRef(null);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  useEffect(() => {
-    if (generatedAd && generatedAd.imageUrl) {
-      drawCanvas();
-    }
-  }, [generatedAd]);
-
-  const applyTextCase = (text, textCase) => {
-    switch (textCase) {
-      case 'uppercase':
-        return text.toUpperCase();
-      case 'lowercase':
-        return text.toLowerCase();
-      case 'capitalize':
-        return text.replace(/\b\w/g, char => char.toUpperCase());
-      default:
-        return text;
-    }
-  };
-
-  const drawCanvas = () => {
+  const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -82,25 +63,92 @@ const AdEditor = ({ generatedAd, onDownload, onUpdate }) => {
         ctx.fillRect(imgX, imgY, imgWidth, imgHeight);
       }
 
-      if (!generatedAd.hideTextAreas) {
-        // Calculate the height of the top and bottom canv areas (15% of total height)
+      const drawTextFunction = (ctx, text, position, width, height, adToUse) => {
+        const fontName = adToUse[`${position}Font`] || 'Impact';
+        let fontSize = adToUse[`${position}FontSize`] || 40;
+        const textColor = adToUse[`${position}TextColor`] || '#000';
+        const textAlignment = adToUse[`${position}TextAlignment`] || 'center';
+        const padding = adToUse[`${position}Padding`] || 10;
+
+        const textCase = adToUse[`${position}TextCase`] || 'uppercase';
+        const processedText = applyTextCase(text || '', textCase);
+
+        let x;
+        if (textAlignment === 'left') {
+          x = padding;
+        } else if (textAlignment === 'right') {
+          x = width - padding;
+        } else {
+          x = width / 2;
+        }
+
         const canvHeight = height * 0.15;
-
-        // Draw top canv area
-        if (generatedAd.topCanvColorEnabled) {
-          ctx.fillStyle = generatedAd.topCanvColor || '#ffffff';
-          ctx.fillRect(0, 0, width, canvHeight);
+        let y;
+        if (position === 'top') {
+          y = canvHeight / 2 + fontSize / 2; // Center text vertically in top canv area
+        } else {
+          y = height - canvHeight / 2 + fontSize / 2; // Center text vertically in bottom canv area
         }
 
-        // Draw bottom canv area
-        if (generatedAd.bottomCanvColorEnabled) {
-          ctx.fillStyle = generatedAd.bottomCanvColor || '#ffffff';
-          ctx.fillRect(0, height - canvHeight, width, canvHeight);
+        // Function to check if text fits
+        const textFits = (text, fontSize) => {
+          ctx.font = `${fontSize}px ${fontName}`;
+          return ctx.measureText(text).width <= width - padding * 2;
+        };
+
+        // Reduce font size if text is too long
+        while (!textFits(processedText, fontSize) && fontSize > 20) {
+          fontSize -= 2;
         }
 
-        // Draw texts
-        drawText(ctx, generatedAd.topText, 'top', width, height, generatedAd);
-        drawText(ctx, generatedAd.bottomText, 'bottom', width, height, generatedAd);
+        ctx.font = `${fontSize}px ${fontName}`;
+        ctx.fillStyle = textColor;
+        ctx.textAlign = textAlignment;
+
+        if (adToUse[`${position}TextOutline`]) {
+          ctx.strokeStyle = 'black';
+          ctx.lineWidth = 3;
+        }
+
+        // Split text into two lines if it's still too long
+        if (!textFits(processedText, fontSize)) {
+          const words = processedText.split(' ');
+          let line1 = '';
+          let line2 = '';
+          for (let i = 0; i < words.length; i++) {
+            if (ctx.measureText(line1 + words[i]).width <= width - padding * 2) {
+              line1 += words[i] + ' ';
+            } else {
+              line2 = words.slice(i).join(' ');
+              break;
+            }
+          }
+
+          // Draw first line
+          if (adToUse[`${position}TextOutline`]) {
+            ctx.strokeText(line1.trim(), x, y);
+          }
+          ctx.fillText(line1.trim(), x, y);
+
+          // Draw second line
+          const lineHeight = fontSize * 1.2;
+          y += position === 'top' ? lineHeight : -lineHeight;
+          if (adToUse[`${position}TextOutline`]) {
+            ctx.strokeText(line2.trim(), x, y);
+          }
+          ctx.fillText(line2.trim(), x, y);
+        } else {
+          // Draw single line
+          if (adToUse[`${position}TextOutline`]) {
+            ctx.strokeText(processedText, x, y);
+          }
+          ctx.fillText(processedText, x, y);
+        }
+      };
+
+      if (!generatedAd.hideTextAreas) {
+        drawTextFunction(ctx, generatedAd.topText, 'top', width, height, generatedAd);
+        drawTextFunction(ctx, generatedAd.bottomText, 'bottom', width, height, generatedAd);
       }
 
       setImageLoaded(true);
@@ -109,88 +157,24 @@ const AdEditor = ({ generatedAd, onDownload, onUpdate }) => {
       console.error('Error loading image:', generatedAd.imageUrl);
     };
     img.src = generatedAd.imageUrl;
-  };
+  }, [generatedAd]);
 
-  const drawText = (ctx, text, position, width, height, adToUse) => {
-    const fontName = adToUse[`${position}Font`] || 'Impact';
-    let fontSize = adToUse[`${position}FontSize`] || 40;
-    const textColor = adToUse[`${position}TextColor`] || '#000';
-    const textAlignment = adToUse[`${position}TextAlignment`] || 'center';
-    const padding = adToUse[`${position}Padding`] || 10;
-
-    const textCase = adToUse[`${position}TextCase`] || 'uppercase';
-    const processedText = applyTextCase(text || '', textCase);
-
-    let x;
-    if (textAlignment === 'left') {
-      x = padding;
-    } else if (textAlignment === 'right') {
-      x = width - padding;
-    } else {
-      x = width / 2;
+  useEffect(() => {
+    if (generatedAd && generatedAd.imageUrl) {
+      drawCanvas();
     }
+  }, [generatedAd, drawCanvas]);
 
-    const canvHeight = height * 0.15;
-    let y;
-    if (position === 'top') {
-      y = canvHeight / 2 + fontSize / 2; // Center text vertically in top canv area
-    } else {
-      y = height - canvHeight / 2 + fontSize / 2; // Center text vertically in bottom canv area
-    }
-
-    // Function to check if text fits
-    const textFits = (text, fontSize) => {
-      ctx.font = `${fontSize}px ${fontName}`;
-      return ctx.measureText(text).width <= width - padding * 2;
-    };
-
-    // Reduce font size if text is too long
-    while (!textFits(processedText, fontSize) && fontSize > 20) {
-      fontSize -= 2;
-    }
-
-    ctx.font = `${fontSize}px ${fontName}`;
-    ctx.fillStyle = textColor;
-    ctx.textAlign = textAlignment;
-
-    if (adToUse[`${position}TextOutline`]) {
-      ctx.strokeStyle = 'black';
-      ctx.lineWidth = 3;
-    }
-
-    // Split text into two lines if it's still too long
-    if (!textFits(processedText, fontSize)) {
-      const words = processedText.split(' ');
-      let line1 = '';
-      let line2 = '';
-      for (let i = 0; i < words.length; i++) {
-        if (ctx.measureText(line1 + words[i]).width <= width - padding * 2) {
-          line1 += words[i] + ' ';
-        } else {
-          line2 = words.slice(i).join(' ');
-          break;
-        }
-      }
-
-      // Draw first line
-      if (adToUse[`${position}TextOutline`]) {
-        ctx.strokeText(line1.trim(), x, y);
-      }
-      ctx.fillText(line1.trim(), x, y);
-
-      // Draw second line
-      const lineHeight = fontSize * 1.2;
-      y += position === 'top' ? lineHeight : -lineHeight;
-      if (adToUse[`${position}TextOutline`]) {
-        ctx.strokeText(line2.trim(), x, y);
-      }
-      ctx.fillText(line2.trim(), x, y);
-    } else {
-      // Draw single line
-      if (adToUse[`${position}TextOutline`]) {
-        ctx.strokeText(processedText, x, y);
-      }
-      ctx.fillText(processedText, x, y);
+  const applyTextCase = (text, textCase) => {
+    switch (textCase) {
+      case 'uppercase':
+        return text.toUpperCase();
+      case 'lowercase':
+        return text.toLowerCase();
+      case 'capitalize':
+        return text.replace(/\b\w/g, char => char.toUpperCase());
+      default:
+        return text;
     }
   };
 
