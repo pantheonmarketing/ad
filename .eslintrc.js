@@ -8,6 +8,7 @@ module.exports = {
   rules: {
     "@typescript-eslint/no-unused-vars": "error",
     "react-hooks/exhaustive-deps": "warn",
-    "react/no-unescaped-entities": "off"
+    "react/no-unescaped-entities": "off",
+    "@typescript-eslint/no-explicit-any": "warn"
   }
 };

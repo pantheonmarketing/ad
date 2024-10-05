@@ -11,54 +11,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { AlignLeft, AlignCenter, AlignRight, Wand2 } from 'lucide-react'
 import { fonts } from '../fonts'
+import { GeneratedAd } from './types' // Keep this import
 
 // Custom debounce function
-function debounce<F extends (...args: any[]) => any>(func: F, wait: number): F & { cancel: () => void } {
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): T & { cancel: () => void } {
   let timeout: ReturnType<typeof setTimeout> | null = null;
-  const debouncedFunc = (...args: Parameters<F>) => {
+  const debouncedFunc = (...args: Parameters<T>) => {
     if (timeout !== null) {
       clearTimeout(timeout);
     }
     timeout = setTimeout(() => func(...args), wait);
   };
-  debouncedFunc.cancel = () => {
+  (debouncedFunc as T & { cancel: () => void }).cancel = () => {
     if (timeout !== null) {
       clearTimeout(timeout);
     }
   };
-  return debouncedFunc as F & { cancel: () => void };
-}
-
-interface GeneratedAd {
-  topText: string;
-  bottomText: string;
-  topFont: string;
-  bottomFont: string;
-  topFontSize: number;
-  bottomFontSize: number;
-  topTextColor: string;
-  bottomTextColor: string;
-  topTextCase: string;
-  bottomTextCase: string;
-  topTextAlignment: string;
-  bottomTextAlignment: string;
-  topTextOutline: boolean;
-  bottomTextOutline: boolean;
-  topAutoBreak: boolean;
-  bottomAutoBreak: boolean;
-  imageSize: number;
-  imagePositionX: number;
-  imagePositionY: number;
-  backgroundOverlay: number;
-  exportSize: { width: number; height: number };
-  topPadding?: number;
-  bottomPadding?: number;
-  topCanvColor?: string;
-  bottomCanvColor?: string;
-  topCanvColorEnabled?: boolean;
-  bottomCanvColorEnabled?: boolean;
-  hideTextAreas?: boolean;
-  [key: string]: string | number | boolean | { width: number; height: number; } | undefined;
+  return debouncedFunc as T & { cancel: () => void };
 }
 
 interface AdEditorComponentProps {
@@ -129,7 +101,7 @@ export function AdEditorComponent({ generatedAd, onUpdate, onSave, onCancel }: A
 
   const handleChange = (
     field: keyof GeneratedAd,
-    value: GeneratedAd[keyof GeneratedAd],
+    value: string | number | boolean | { width: number; height: number },
     position: 'top' | 'bottom' | null = null
   ) => {
     console.log('handleChange called:', { field, value, position });
@@ -137,14 +109,14 @@ export function AdEditorComponent({ generatedAd, onUpdate, onSave, onCancel }: A
       const newState = { ...prev };
       if (position) {
         const key = `${position}${(field as string).charAt(0).toUpperCase() + (field as string).slice(1)}` as keyof GeneratedAd;
-        newState[key] = value;
+        newState[key] = value as any;
         if (matchTexts && (position === 'top' || position === 'bottom')) {
           const otherPosition = position === 'top' ? 'bottom' : 'top';
           const otherKey = `${otherPosition}${(field as string).charAt(0).toUpperCase() + (field as string).slice(1)}` as keyof GeneratedAd;
-          newState[otherKey] = value;
+          newState[otherKey] = value as any;
         }
       } else {
-        newState[field] = value;
+        newState[field] = value as any;
       }
       return newState;
     });
@@ -406,10 +378,11 @@ export function AdEditorComponent({ generatedAd, onUpdate, onSave, onCancel }: A
       
       <Button 
         onClick={() => {
-          handleChange('bottomCanvColor', editedAd.topCanvColor);
-          handleChange('bottomCanvColorEnabled', editedAd.topCanvColorEnabled);
+          handleChange('bottomCanvColor', editedAd.topCanvColor || '');
+          handleChange('bottomCanvColorEnabled', editedAd.topCanvColorEnabled || false);
         }}
         className="w-full"
+        disabled={editedAd.hideTextAreas}
       >
         Match Bottom Canv Color to Top
       </Button>
