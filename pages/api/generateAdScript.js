@@ -5,6 +5,15 @@ const openai = new OpenAI({
 });
 
 export default async function handler(req, res) {
+  console.log('Received request method:', req.method);
+  console.log('Received request body:', req.body);
+
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    console.log('Method not allowed');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   const { 
     avatar, 
     desiredOutcome, 
