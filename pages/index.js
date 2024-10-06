@@ -27,7 +27,6 @@ export default function FacebookAdCreator() {
     imageStyle: '',
   });
   const [generatedAd, setGeneratedAd] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false); // State to control the editor visibility
   const [uploadedImage, setUploadedImage] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -590,9 +589,9 @@ export default function FacebookAdCreator() {
               type="button"
               onClick={generateAd}
               className="w-full bg-blue-500 text-white py-3 rounded text-lg flex items-center justify-center"
-              disabled={loading || isUploading}
+              disabled={isUploading}
             >
-              {loading ? (
+              {isGeneratingAd ? (
                 <>
                   <Oval
                     height={20}

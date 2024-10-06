@@ -14,10 +14,10 @@ import { fonts } from '../fonts'
 import { GeneratedAd } from './types' // Keep this import
 
 // Custom debounce function
-function debounce<T extends (...args: any[]) => any>(
+function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
-): T & { cancel: () => void } {
+): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null;
   const debouncedFunc = (...args: Parameters<T>) => {
     if (timeout !== null) {
@@ -25,12 +25,7 @@ function debounce<T extends (...args: any[]) => any>(
     }
     timeout = setTimeout(() => func(...args), wait);
   };
-  (debouncedFunc as T & { cancel: () => void }).cancel = () => {
-    if (timeout !== null) {
-      clearTimeout(timeout);
-    }
-  };
-  return debouncedFunc as T & { cancel: () => void };
+  return debouncedFunc;
 }
 
 interface AdEditorComponentProps {
@@ -109,14 +104,14 @@ export function AdEditorComponent({ generatedAd, onUpdate, onSave, onCancel }: A
       const newState = { ...prev };
       if (position) {
         const key = `${position}${(field as string).charAt(0).toUpperCase() + (field as string).slice(1)}` as keyof GeneratedAd;
-        newState[key] = value as any;
+        newState[key] = value;
         if (matchTexts && (position === 'top' || position === 'bottom')) {
           const otherPosition = position === 'top' ? 'bottom' : 'top';
           const otherKey = `${otherPosition}${(field as string).charAt(0).toUpperCase() + (field as string).slice(1)}` as keyof GeneratedAd;
-          newState[otherKey] = value as any;
+          newState[otherKey] = value;
         }
       } else {
-        newState[field] = value as any;
+        newState[field] = value;
       }
       return newState;
     });
@@ -176,18 +171,16 @@ export function AdEditorComponent({ generatedAd, onUpdate, onSave, onCancel }: A
     useEffect(() => {
       setLocalText(positionText);
     }, [position, positionText]);
-
     const debouncedHandleChange = useMemo(
-      () => debounce((value: string) => {
+      () => debounce((...args: unknown[]) => {
+        const value = args[0] as string;
         handleChange('Text' as keyof GeneratedAd, value, position);
       }, 300),
-      [position]
+      [position, handleChange]
     );
 
     useEffect(() => {
-      return () => {
-        debouncedHandleChange.cancel();
-      };
+      // No need for cleanup in this case
     }, [debouncedHandleChange]);
 
     const handleLocalTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
