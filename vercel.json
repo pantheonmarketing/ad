@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/generateAdScript.js": {
+    "pages/api/**/*.js": {
       "maxDuration": 60
     }
   }
