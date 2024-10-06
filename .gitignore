@@ -4,7 +4,6 @@
 /node_modules
 /.pnp
 .pnp.js
-.yarn/install-state.gz
 
 # testing
 /coverage
@@ -27,6 +26,7 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env
 
 # vercel
 .vercel
@@ -34,4 +34,95 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-"secrets.txt" 
+
+# ides and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# vs code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# logs
+logs
+*.log
+
+# os generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# optional npm cache directory
+.npm
+
+# optional eslint cache
+.eslintcache
+
+# optional repl history
+.node_repl_history
+
+# output of 'npm pack'
+*.tgz
+
+# yarn integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+.env.production
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+out
+
+# nuxt.js build / generate output
+.nuxt
+dist
+
+# gatsby files
+.cache/
+# comment in the public line in if your project uses gatsby and not next.js
+# https://nextjs.org/blog/next-9-1#public-directory-support
+# public
+
+# vuepress build output
+.vuepress/dist
+
+# serverless directories
+.serverless/
+
+# fusebox cache
+.fusebox/
+
+# dynamodb local files
+.dynamodb/
+
+# ternjs port file
+.tern-port
+
+# stores vscode versions used for testing vscode extensions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
