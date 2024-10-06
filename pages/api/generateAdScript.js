@@ -15,31 +15,33 @@ export default async function handler(req, res) {
     const { avatar, desiredOutcome, ineffectiveMethod1, ineffectiveMethod2, ineffectiveMethod3, newSolution } = req.body;
 
     const prompt = `
-    Create two variations of an ad script for the following:
-    Avatar: ${avatar}
-    Desired Outcome: ${desiredOutcome}
-    Ineffective Methods: ${ineffectiveMethod1}, ${ineffectiveMethod2}, ${ineffectiveMethod3}
-    New Solution: ${newSolution}
+    Write two variations of a Facebook ad caption using the following information:
 
-    Strictly follow this template for each variation:
+    Avatar and Their Problem: ${avatar}
+    Desired Outcome: ${desiredOutcome}
+    Ineffective Method 1: ${ineffectiveMethod1}
+    Ineffective Method 2: ${ineffectiveMethod2}
+    Ineffective Method 3: ${ineffectiveMethod3}
+    New Solution Name: ${newSolution}
+
+    Please write each ad copy variation in this format:
 
     Variation 1:
-    Headline (max 10 words): [Insert headline here]
-    
-    Main body (50-70 words):
-    [Insert main body text here]
-    
-    Call to Action (5-7 words): [Insert call to action here]
+    Line 1: 📞 CALLING ALL [AVATAR + THEIR PAIN]: [achieve your desired outcome] with this NEW METHOD...
+    Line 2: I understand that you may have already tried:
+    - [Ineffective Method 1]
+    - [Ineffective Method 2]
+    - Or even - [Ineffective Method 3]
+    Line 3: But you're still seeing no progress towards [desired outcome].
+    Line 4: That's why I want to introduce you to [new solution name].
+    Line 5: As of 2024, it's the fastest and easiest way to [desired outcome].
+    Line 6: If you're interested in learning more…
+    Line 7: You can access it right here: [INSERT LINK]
 
     Variation 2:
-    Headline (max 10 words): [Insert headline here]
-    
-    Main body (50-70 words):
-    [Insert main body text here]
-    
-    Call to Action (5-7 words): [Insert call to action here]
+    [Create a different approach using the same information but with a unique angle or hook]
 
-    Focus on the benefits of the new solution and how it addresses the avatar's pain points. Be direct and persuasive.
+    Make sure both ad copy variations are engaging, persuasive, and tailored to the specific avatar and their problem. Use emojis where appropriate to make the ads more visually appealing.
     `;
 
     console.log('Sending request to OpenAI');
@@ -48,7 +50,7 @@ export default async function handler(req, res) {
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 700,
-      temperature: 0.3,
+      temperature: 0.7,
     });
     const endTime = Date.now();
     console.log(`OpenAI request took ${endTime - startTime}ms`);
