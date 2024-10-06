@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Copy } from 'lucide-react';
 import Image from 'next/image';
+import AdGenerationLoadingScreen from '../components/AdGenerationLoadingScreen';
 
 export default function FacebookAdCreator() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -106,6 +107,8 @@ export default function FacebookAdCreator() {
     cartoon: 'Colorful cartoon drawing of {keywords}, with expressive characters and dynamic poses.',
   };
 
+  const [isGeneratingAd, setIsGeneratingAd] = useState(false);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setAdDetails((prev) => ({ ...prev, [name]: value }));
@@ -129,14 +132,8 @@ export default function FacebookAdCreator() {
       return;
     }
 
-    const toastId = toast.info('Ad is being generated, please wait...', {
-      position: 'top-right',
-      autoClose: false,
-      closeOnClick: false,
-      draggable: false,
-    });
+    setIsGeneratingAd(true);
 
-    setLoading(true);
     try {
       const scriptResponse = await axios.post('/api/generateAdScript', {
         avatar: adDetails.avatar,
@@ -182,10 +179,10 @@ export default function FacebookAdCreator() {
         bottomText: memeTextResponse.data.bottomText.toUpperCase(),
         topFont: 'Impact',
         bottomFont: 'Impact',
-        topFontSize: 60, // Adjust this value as needed
-        bottomFontSize: 60, // Adjust this value as needed
-        topTextColor: '#8B0000', // Dark red
-        bottomTextColor: '#00008B', // Dark blue
+        topFontSize: 60,
+        bottomFontSize: 60,
+        topTextColor: '#8B0000',
+        bottomTextColor: '#00008B',
         topTextCase: 'uppercase',
         bottomTextCase: 'uppercase',
         topTextAlignment: 'center',
@@ -196,29 +193,16 @@ export default function FacebookAdCreator() {
         imagePositionX: 50,
         imagePositionY: 50,
         backgroundOverlay: 0,
-        exportSize: { width: 1080, height: 1080 }, // Default to square
+        exportSize: { width: 1080, height: 1080 },
       };
 
       setGeneratedAd(initialAd);
-
-      // Update the toast to indicate success
-      toast.update(toastId, {
-        render: 'Ad generated successfully!',
-        type: 'success',
-        autoClose: 5000,
-        isLoading: false,
-      });
+      toast.success('Ad generated successfully!');
     } catch (error) {
       console.error('Error generating ad:', error.response ? error.response.data : error.message);
-      // Update the toast to indicate error
-      toast.update(toastId, {
-        render: 'Failed to generate ad. Please try again.',
-        type: 'error',
-        autoClose: 5000,
-        isLoading: false,
-      });
+      toast.error('Failed to generate ad. Please try again.');
     } finally {
-      setLoading(false);
+      setIsGeneratingAd(false);
     }
   };
 
@@ -721,6 +705,8 @@ export default function FacebookAdCreator() {
           </div>
         </div>
       )}
+
+      {isGeneratingAd && <AdGenerationLoadingScreen />}
     </div>
   );
 }
